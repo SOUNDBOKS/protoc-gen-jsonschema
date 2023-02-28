@@ -297,6 +297,26 @@ func (c *Converter) convertFile(file *descriptor.FileDescriptorProto, fileExtens
 			return nil, fmt.Errorf("no such package found: %s", file.GetPackage())
 		}
 
+		for _, serviceDesc := range file.GetService() {
+			serviceOpenRPCSchema, err := c.convertService(pkg, serviceDesc)
+			if err != nil {
+				c.logger.WithError(err).WithField("proto_filename", protoFileName).Error("Failed to convert")
+				return nil, err
+			}
+
+			// Generate a schema filename:
+			rpcSchemaFileName := c.generateSchemaFilename(file, fileExtension, serviceDesc.GetName())
+			c.logger.WithField("proto_filename", protoFileName).WithField("msg_name", serviceDesc.GetName()).WithField("jsonschema_filename", rpcSchemaFileName).Info("Generating JSON-schema for MESSAGE")
+
+			// Add a response:
+			resFile := &plugin.CodeGeneratorResponse_File{
+				Name:    proto.String(rpcSchemaFileName),
+				Content: proto.String(string(serviceOpenRPCSchema)),
+			}
+
+			response = append(response, resFile)
+		}
+
 		// Go through all of the messages in this file:
 		for _, msgDesc := range file.GetMessageType() {
 

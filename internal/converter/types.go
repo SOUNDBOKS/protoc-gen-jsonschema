@@ -380,6 +380,59 @@ func (c *Converter) convertField(curPkg *ProtoPackage, desc *descriptor.FieldDes
 	return jsonSchemaType, nil
 }
 
+func getBareNameFromNamespacedString(in *string) string {
+	segments := strings.Split(*in, ".")
+	return segments[len(segments)-1]
+}
+
+func (c *Converter) convertServiceMethod(curPkg *ProtoPackage, serviceDesc *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) (interface{}, error) {
+	inputSchema := map[string]interface{}{
+		"name": getBareNameFromNamespacedString(method.InputType),
+		"schema": map[string]interface{}{
+			"$ref": "./" + getBareNameFromNamespacedString(method.InputType) + ".json",
+		},
+	}
+
+	schema := map[string]interface{}{
+		"name": method.Name,
+		"result": map[string]interface{}{
+			"name": getBareNameFromNamespacedString(method.OutputType),
+			"schema": map[string]interface{}{
+				"$ref": "./" + getBareNameFromNamespacedString(method.OutputType) + ".json",
+			},
+		},
+		"params": [1]interface{}{inputSchema},
+	}
+
+	return schema, nil
+}
+
+func (c *Converter) convertService(curPkg *ProtoPackage, serviceDesc *descriptor.ServiceDescriptorProto) ([]byte, error) {
+	methods := make([]interface{}, len(serviceDesc.Method))
+	for i, method := range serviceDesc.Method {
+		schema, err := c.convertServiceMethod(curPkg, serviceDesc, method)
+		if err != nil {
+			return nil, err
+		}
+		methods[i] = schema
+	}
+
+	rpc := map[string]interface{}{
+		"info": map[string]interface{}{
+			"title": serviceDesc.Name,
+		},
+		"methods": methods,
+	}
+
+	json, err := json.MarshalIndent(rpc, "", "    ")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return json, nil
+}
+
 // Converts a proto "MESSAGE" into a JSON-Schema:
 func (c *Converter) convertMessageType(curPkg *ProtoPackage, msgDesc *descriptor.DescriptorProto) (*jsonschema.Schema, error) {
 

@@ -8,6 +8,13 @@ Useful for people who define their data using ProtoBuf, but use JSON for the "wi
 "Heavily influenced" by [Google's protobuf-to-BigQuery-schema compiler](https://github.com/GoogleCloudPlatform/protoc-gen-bq-schema).
 
 
+## SOUNDBOKS FORK SPECIFIC
+
+This fork implements experimental support for generating OpenRPC schemas from service definition in proto files.  
+
+
+
+
 Generated Schemas
 -----------------
 
