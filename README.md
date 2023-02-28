@@ -12,7 +12,7 @@ Useful for people who define their data using ProtoBuf, but use JSON for the "wi
 
 This fork implements experimental support for generating OpenRPC schemas from service definition in proto files.  
 
-
+Usage: `go get github.com/SOUNDBOKS/protoc-gen-jsonschema && protoc --jsonschema_out=. RPCTest.proto`
 
 
 Generated Schemas
